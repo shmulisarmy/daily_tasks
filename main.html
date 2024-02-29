@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly habit tracker</title>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+<script type="text/babel">
+
+    
+   
+
+
+    let progress
+
+    progress = JSON.parse(localStorage.getItem("progress"))
+    if (progress == null){
+        progress = [
+            [0, 1, 0, 1, 0, 1, 0],
+            [1, 0, 1, 0, 1, 1, 1],
+            [1, 1, 0, 0, 1, 0, 1],
+            [1, 1, 0, 0, 1, 0, 1],
+            [1, 1, 0, 0, 1, 0, 1],
+        ];
+        localStorage.setItem("progress", JSON.stringify(progress))
+
+    }
+ 
+  const day_index = 3;
+
+  const notes = {
+    1: {
+        1: "today was easy",
+        3: "I ate pizza for lunch"
+    } 
+    }
+
+  const tasks = [
+    "clean room",
+    "shower",
+    "feed baby",
+    "buy groceries",
+    "study",
+    "exercise"
+  ];
+
+  window.addEventListener('beforeunload', function (event) {
+  
+    alert("goodbye");
+})
+
+ 
+
+  function No_note({row_index, col_index}){
+    return(
+        <div>
+            <h3 class="No_note">
+                this cell has no note, would you like to add one
+            </h3> 
+
+            <button 
+                class="add_note" 
+                onClick={() => add_note(row_index, col_index, prompt("note: "))}>
+                add note
+            </button>
+        </div>
+    )
+  }
+
+  function get_note(row_index, col_index){
+    if (row_index in notes && col_index in notes[row_index]){
+        return notes[row_index][col_index];
+    } else {
+        return <No_note {...{row_index, col_index}}/>
+  }
+}
+
+  
+
+  function Cell({ value, toggle_complete, note}) {
+    const [toggle_value, set_toggle_value] = React.useState(1);
+
+    function show_note(event){
+        event.stopPropagation()
+        set_toggle_value(1 - toggle_value)
+    }
+
+    return (
+      <td onClick={toggle_complete}>
+        <button class="show_note" onClick={show_note}>{toggle_value? "show note": "hide note"}</button>
+        {toggle_value? value === 1 ? '✔️' : '❌': note}
+      </td>
+    );
+  }
+
+  const Days_of_th_week = (() =>
+    <tr>
+        <th className="top-left-corner"></th>
+        <th>day 1</th>
+        <th>day 2</th>
+        <th>day 3</th>
+        <th>day 4</th>
+        <th>day 5</th>
+        <th>day 6</th>
+        <th>day 7</th>
+    </tr>
+)
+  
+
+  function ProgressTable() {
+    const [list, setList] = React.useState(progress);
+    const [notes, setNotes] = React.useState({
+        1: {
+            1: "today was easy",
+            3: "I ate pizza for lunch"
+        }
+        });
+
+        function add_note(row_index, col_index, note) {
+            alert("inside add_note");
+            setNotes({
+                ...prevNotes,
+                [row_index]: {
+                    ...prevNotes[row_index],
+                    [col_index]: note
+                }
+            });
+        }
+
+
+    function toggleCell(row, col) {
+      const updatedList = list.map((r, rowIndex) =>
+        rowIndex === row
+          ? r.map((c, colIndex) => (colIndex === col ? (c === 1 ? 0 : 1) : c))
+          : r
+      );
+      setList(updatedList);
+    }
+
+    return (
+      <div>
+        <table>
+          <thead>
+            <Days_of_th_week/>
+          </thead>
+          <tbody>
+            {list.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                <td className="task">{tasks[rowIndex]}</td>
+                {row.map((cell, colIndex) => (
+                  <Cell
+                    key={colIndex}
+                    rowIndex = {rowIndex}
+                    note = {get_note(rowIndex, colIndex)}
+                    colIndex = {colIndex}
+                    value={cell}
+                    toggle_complete={() => toggleCell(rowIndex, colIndex)}
+                  />
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  ReactDOM.render(<ProgressTable />, document.getElementById('root'));
+</script>
+
+<style>
+
+    @keyframes grow {
+    0%{
+        transform: scale(.5);
+    }}
+    
+  #root {
+    margin: 5%;
+    padding: 5%;
+    min-width: 50%;
+    background: linear-gradient(90deg, rgba(251, 192, 81, 0.884), rgb(199, 78, 78));
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  td, th {
+    width: 60px;
+    height: 60px;
+    border: 1px solid black;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    animation: grow 2s;
+  }
+  .top-left-corner {
+    border-top-left-radius: 30px;
+  }
+  .task {
+    background-color: #f2f2f2;
+    padding: 10px;
+    text-align: center;
+  }
+  .show_note{
+    font-family: 'Courier New', Courier, monospace;
+    font-size: xx-small;
+    display: none;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+  }
+  td:hover {
+    background-color: rgb(182, 174, 174);
+    .show_note{
+        display: block;
+    }
+    }
+    td:active{
+        transform: scale(1.1);
+        background-color: rgb(151, 151, 206);
+    }
+
+    .No_note{
+        z-index: -1;
+        background-color: black;
+        color: red;
+        font-size: small;
+        animation: grow 2s;
+    }
+    .add_note{
+        background-color: green;
+    }
+</style>
+
+</body>
+</html>
